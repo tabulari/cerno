@@ -9,6 +9,7 @@ from app.db import init_db
 from app.logging import setup_logging
 from app.redis import close_redis
 from app.routes import health, auth, incidents, events
+from app.security.middleware import RateLimitMiddleware
 
 
 @asynccontextmanager
@@ -40,8 +41,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(incidents.router, prefix="/api/v1")
 app.include_router(events.router, prefix="/api/v1")
+
