@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/cerno
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - qdrant
+      - postgres
+
+  telegram-bot:
+    build:
+      context: ./telegram-bot
+      dockerfile: Dockerfile
+    environment:
+      - API_URL=http://backend:8000/api/v1
+    env_file:
+      - .env
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cerno
+    ports:
+      - "5432:5432"
+
+  langfuse:
+    image: langfuse/langfuse:3
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/cerno
+      - NEXTAUTH_SECRET=secret
+      - SALT=secret
+    depends_on:
+      - postgres
