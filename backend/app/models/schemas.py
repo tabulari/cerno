@@ -62,6 +62,9 @@ class IncidentResponse(BaseModel):
     triage_summary: Optional[str]
     triage_runbook: Optional[str]
     confidence: Optional[float]
+    needs_human_review: bool = False
+    reasoning_steps: Optional[list[dict]] = None
+    evidence_paths: Optional[list[str]] = None
     created_at: datetime
     updated_at: datetime
 

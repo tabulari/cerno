@@ -5,9 +5,17 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from app.redis import get_redis
+from app.models.schemas import StateTransition
+from app.services.state_machine import StateMachine
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/incidents", tags=["events"])
+
+
+@router.get("/{incident_id}/transitions", response_model=list[StateTransition])
+async def get_transitions(incident_id: int):
+    sm = await StateMachine.create(incident_id)
+    return await sm.get_transitions()
 
 
 @router.get("/{incident_id}/events")
@@ -22,7 +30,9 @@ async def stream_events(incident_id: int, request: Request):
             while True:
                 if await request.is_disconnected():
                     break
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                message = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=1.0
+                )
                 if message and message["type"] == "message":
                     yield f"data: {message['data']}\n\n"
                 else:

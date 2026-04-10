@@ -1,0 +1,46 @@
+# Python
+.ruff_cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+test_api_key.py
+test_openrouter.py
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.next/
+frontend/.next/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Qdrant
+qdrant_storage/
+
+# Redis
+dump.rdb

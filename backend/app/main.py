@@ -8,7 +8,7 @@ from app.config import get_settings
 from app.db import init_db
 from app.logging import setup_logging
 from app.redis import close_redis
-from app.routes import health, auth, incidents, events
+from app.routes import health, auth, incidents
 from app.security.middleware import RateLimitMiddleware
 
 
@@ -18,7 +18,9 @@ async def lifespan(app: FastAPI):
     logger = structlog.get_logger()
     settings = get_settings()
 
-    logger.info("startup", mock_mode=settings.mock_mode, environment=settings.environment)
+    logger.info(
+        "startup", mock_mode=settings.mock_mode, environment=settings.environment
+    )
     await init_db()
     logger.info("database.initialized")
 
@@ -46,5 +48,3 @@ app.add_middleware(RateLimitMiddleware)
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(incidents.router, prefix="/api/v1")
-app.include_router(events.router, prefix="/api/v1")
-
