@@ -21,7 +21,7 @@
 | **Vector Database** | Qdrant (RAG over Reaction Commerce codebase, incident deduplication) |
 | **State & Queuing** | Redis (incident lifecycle state machine, pub/sub for SSE, rate limiting) |
 | **Database** | PostgreSQL (incidents, users, tickets, Langfuse data) |
-| **Frontend** | Next.js (App Router) with guided intake wizard, SSE timeline, reasoning accordion |
+| **Frontend** | Next.js 14 (App Router) with guided intake wizard, SSE timeline, reasoning accordion, DOMPurify |
 | **Messaging** | Telegram Bot API (long-polling, structured guided intake) |
 | **Observability** | Langfuse (self-hosted, pinned to v3), structlog (JSON), OpenTelemetry |
 | **Infrastructure** | Docker Compose (7 services + 1 init container) |
@@ -275,12 +275,13 @@ Layer 4: LLM-Guard Output Scanning
   - Sensitive data leak detection in LLM responses
   - Response relevance validation
 
-Layer 5: Next.js Render Sanitization
-  - DOMPurify on all LLM-generated text
+Layer 5: Frontend Sanitization
+  - DOMPurify on triage_summary, triage_runbook, reasoning_steps
+  - Allowed tags: b, i, em, strong, code, pre, br, p, ul, ol, li, a
   - CSP headers
-  - No dangerouslySetInnerHTML
 
 Layer 6: Infrastructure
+  - (Demo: auth bypassed)
   - JWT auth (HS256) on all /api/v1/ endpoints
   - Telegram auth via bot token
   - Secrets via Docker env vars (never in code)
@@ -320,6 +321,14 @@ _(Replace placeholders below with actual evidence prior to submission)_
   [INSERT: Log showing LLM-Guard output scanner catching sensitive data
   (e.g., an API key or internal URL) in the LLM response before it reaches the user]
   ```
+
+### Demo Mode
+
+For demonstrations without API keys or external dependencies:
+- Set `MOCK_MODE=true` in `.env` - all integrations use mock implementations
+- No JWT required - guest user auto-created on first incident
+- Frontend bypasses authentication entirely
+- Perfect for trade shows and presentations
 
 ---
 

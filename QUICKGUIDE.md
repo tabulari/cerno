@@ -96,20 +96,33 @@ All services should show `running` (except `indexer`, which shows `exited (0)` a
 
 ---
 
-## Step 4: Test the Web Wizard Flow
+## Step 4: Test the Web Wizard Flow (No Auth Required)
 
 1. Open [localhost:3000](http://localhost:3000) in your browser.
-2. Register a new account (or log in if already registered).
-3. Click **"Report Incident"** to open the guided wizard.
-4. Fill in the steps:
+2. Click **"Report Incident"** - no login required!
+3. Fill in the steps:
    - **Description:** `"Checkout page returns 500 error when adding items to cart"`
    - **Location:** `"checkout service"`
    - **Evidence:** Upload a screenshot or log file (`.png`, `.jpg`, `.log`, `.txt`, `.json`)
    - **Review & Submit**
-5. You will be redirected to the **Incident Detail** page, where you can observe:
+4. You will be redirected to the **Incident Detail** page, where you can observe:
    - The **live timeline** showing state transitions (`SUBMITTED → TRIAGING → TRIAGED → TICKETED → NOTIFIED`)
    - The **reasoning accordion** showing each sub-agent's analysis (CodeAnalyst, LogParser, SeverityScorer)
    - The **final triage result** with severity (P1-P5), summary, and suggested runbook
+
+---
+
+## Step 4b: Test Without Docker (Optional)
+
+For quick iteration without Docker:
+
+```bash
+# Frontend only
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:3000
+```
 
 ---
 
@@ -213,11 +226,13 @@ Mock mode provides:
 | Problem                             | Solution                                                                                           |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `indexer` keeps restarting          | Check `docker compose logs indexer`. Ensure `chunks.json` exists in the expected path.             |
-| Port 3000 already in use            | Stop other services on port 3000, or change the frontend port in `docker-compose.yml`.             |
+| Port 3000 already in use           | Stop other services on port 3000, or change the frontend port in `docker-compose.yml`.             |
+| Port 8000 already in use            | Another project is using port 8000. Kill that process or stop the project.                        |
 | Langfuse shows "connection refused" | Postgres may still be starting. Wait 10s and refresh. Check `docker compose logs langfuse`.        |
+| Backend returns 404 on /incidents    | Another project is using port 8000 (kill it). Restart backend: `docker compose restart backend`. |
 | Backend returns 500 on triage       | Check `docker compose logs backend`. Verify `OPENROUTER_API_KEY` is set (or use `MOCK_MODE=true`). |
-| Telegram bot not responding         | Verify `TELEGRAM_BOT_TOKEN` in `.env`. Check `docker compose logs telegram-bot`.                   |
-| Qdrant collection empty             | The indexer may not have run. Force re-index: `docker compose restart indexer`.                    |
+| Telegram bot not responding        | Verify `TELEGRAM_BOT_TOKEN` in `.env`. Check `docker compose logs telegram-bot`.                   |
+| Qdrant collection empty            | The indexer may not have run. Force re-index: `docker compose restart indexer`.                    |
 
 ---
 

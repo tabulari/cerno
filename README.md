@@ -6,6 +6,14 @@
 
 It accepts multimodal incident reports (free-text descriptions, error screenshots, log files) through two intake channels: a **guided web wizard** and a **Telegram bot**. A LangGraph pipeline of three specialized sub-agents analyzes the evidence, assigns a severity score (P1-P5), and suggests a runbook -- with every step of the agent's reasoning visible to the operator.
 
+### Demo Mode
+
+For demonstrations, auth is bypassed. A "guest" user is automatically created on first incident submission. No login or registration required:
+- Open http://localhost:3000
+- Click "Report Incident"
+- Complete the wizard
+- View the incident detail with timeline and reasoning accordion
+
 ### Use Cases
 
 **Web Wizard Intake** -- An engineer uses the Next.js guided form to submit a structured incident report with attached server logs. The report passes through the security layers, the three-agent pipeline triages it, and the result appears on the dashboard with a severity score, summary, and suggested runbook.
@@ -149,8 +157,10 @@ Six-layer defense-in-depth strategy:
 | 2 | LLM-Guard Input | Prompt injection, jailbreak, toxicity, and invisible character detection |
 | 3 | Presidio PII Redaction | Auto-redacts emails, phone numbers, SSNs, credit cards before LLM processing |
 | 4 | LLM-Guard Output | Sensitive data leak detection and response relevance validation |
-| 5 | Next.js Render | DOMPurify on all LLM-generated text, CSP headers |
-| 6 | Infrastructure | JWT auth (HS256), secrets via Docker env vars, `uv audit` in build, agent has read-only access |
+| 5 | Frontend Sanitization | DOMPurify on triage_summary, triage_runbook, and reasoning steps; CSP headers |
+| 6 | Infrastructure | (Demo: auth bypassed) JWT auth (HS256), secrets via Docker env vars, `uv audit` in build, agent has read-only access |
+
+> **Demo Mode Note:** For demonstrations, authentication is bypassed and a guest user is auto-created. Set `MOCK_MODE=true` to run without external API keys.
 
 ### Observability
 
