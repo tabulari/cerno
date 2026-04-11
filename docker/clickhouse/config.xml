@@ -1,0 +1,22 @@
+<clickhouse>
+    <!-- Listen on all interfaces -->
+    <listen_host>::</listen_host>
+    <listen_host>0.0.0.0</listen_host>
+
+    <!-- Zookeeper configuration for replication -->
+    <zookeeper>
+        <node>
+            <host>zookeeper</host>
+            <port>2181</port>
+        </node>
+    </zookeeper>
+
+    <!-- Macros for cluster configuration -->
+    <macros>
+        <shard>1</shard>
+        <replica>1</replica>
+    </macros>
+
+    <!-- Skip check for incorrect settings to allow flexibility -->
+    <skip_check_for_incorrect_settings>1</skip_check_for_incorrect_settings>
+</clickhouse>

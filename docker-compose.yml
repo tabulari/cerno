@@ -117,17 +117,85 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Zookeeper for ClickHouse replication (required by Langfuse)
+  zookeeper:
+    image: zookeeper:latest
+    restart: unless-stopped
+    ports:
+      - '2181:2181'
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888;2181
+    volumes:
+      - zookeeper_data:/data
+    healthcheck:
+      test: ['CMD', 'nc', '-z', 'localhost', '2181']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Langfuse PostgreSQL - separate database for observability
+  langfuse-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langfuse
+    ports:
+      - '5433:5432'
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    restart: unless-stopped
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    environment:
+      CLICKHOUSE_DB: langfuse
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./docker/clickhouse/config.xml:/etc/clickhouse-server/config.d/langfuse.xml:ro
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8123/ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   langfuse:
     image: langfuse/langfuse:3
     ports:
       - '3001:3000'
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/cerno
+      - DATABASE_URL=postgresql://postgres:postgres@langfuse-postgres:5432/langfuse
       - NEXTAUTH_SECRET=${JWT_SECRET:-changeme-langfuse-secret}
+      - NEXTAUTH_URL=http://localhost:3001
       - SALT=${JWT_SECRET:-changeme-langfuse-salt}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       - TELEMETRY_ENABLED=false
+      - CLICKHOUSE_URL=http://clickhouse:8123
+      - CLICKHOUSE_MIGRATION_URL=clickhouse://clickhouse:9000
+      - CLICKHOUSE_USER=clickhouse
+      - CLICKHOUSE_PASSWORD=clickhouse
     depends_on:
-      postgres:
+      langfuse-postgres:
+        condition: service_healthy
+      clickhouse:
         condition: service_healthy
     restart: unless-stopped
 
@@ -163,3 +231,7 @@ volumes:
   qdrant_data:
   postgres_data:
   redis_data:
+  clickhouse_data:
+  clickhouse_logs:
+  langfuse_postgres_data:
+  zookeeper_data:
