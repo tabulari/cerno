@@ -129,6 +129,7 @@ async def create_incident(
 @router.get("/", response_model=list[IncidentResponse])
 async def list_incidents(
     state: Optional[IncidentState] = None,
+    service: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
@@ -141,6 +142,8 @@ async def list_incidents(
     )
     if state:
         query = query.where(Incident.state == state)
+    if service:
+        query = query.where(Incident.service.ilike(f"%{service}%"))
     result = await db.execute(query)
     return result.scalars().all()
 

@@ -116,8 +116,12 @@ export async function createIncident(formData: FormData) {
   });
 }
 
-export async function listIncidents(state?: string) {
-  const path = state ? `/incidents/?state=${state}` : '/incidents/';
+export async function listIncidents(state?: string, service?: string) {
+  const params = new URLSearchParams();
+  if (state) params.set('state', state);
+  if (service) params.set('service', service);
+  const qs = params.toString();
+  const path = qs ? `/incidents/?${qs}` : '/incidents/';
   return apiFetch<IncidentResponse[]>(path);
 }
 

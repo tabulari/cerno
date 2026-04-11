@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import DOMPurify from 'dompurify';
 import {
   getIncident,
   getTransitions,
@@ -11,6 +12,13 @@ import {
 } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
+
+function sanitize(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'br', 'p', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'class'],
+  });
+}
 
 const SEVERITY_COLORS: Record<string, string> = {
   P1: 'bg-red-600 text-white',
@@ -261,9 +269,10 @@ export default function IncidentDetailPage() {
                           </div>
                         )}
                         <p className="text-xs text-gray-500 mb-1">Finding</p>
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap">
-                          {step.finding}
-                        </p>
+                        <p
+                          className="text-sm text-gray-300 whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: sanitize(step.finding) }}
+                        />
                       </div>
                     )}
                   </div>
@@ -279,18 +288,20 @@ export default function IncidentDetailPage() {
               {incident.triage_summary && (
                 <div className="mb-4">
                   <p className="text-sm text-gray-500 mb-1">Summary</p>
-                  <p className="text-gray-300 whitespace-pre-wrap">
-                    {incident.triage_summary}
-                  </p>
+                  <p
+                    className="text-gray-300 whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: sanitize(incident.triage_summary) }}
+                  />
                 </div>
               )}
               {incident.triage_runbook && (
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Suggested Runbook</p>
                   <div className="rounded-lg bg-gray-800 px-4 py-3">
-                    <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
-                      {incident.triage_runbook}
-                    </pre>
+                    <pre
+                      className="text-sm text-gray-300 whitespace-pre-wrap font-mono"
+                      dangerouslySetInnerHTML={{ __html: sanitize(incident.triage_runbook) }}
+                    />
                   </div>
                 </div>
               )}
